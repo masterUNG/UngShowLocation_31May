@@ -1,6 +1,8 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:ungshowlocation/utility/dialog.dart';
 import 'package:ungshowlocation/utility/my_style.dart';
 import 'package:ungshowlocation/widgets/show_progress.dart';
 
@@ -167,7 +169,27 @@ class _CreateAccountState extends State<CreateAccount> {
 
   Future<Null> checkUserAndCreateAccount(
       {String? name, String? user, String? password}) async {
-    String apiCheckUser = 'https://www.androidthai.in.th/bigc/getUserWhereUser.php?isAdd=true&user=$user';
+    String apiCheckUser =
+        'https://www.androidthai.in.th/bigc/getUserWhereUser.php?isAdd=true&user=$user';
+
+    await Dio().get(apiCheckUser).then((value) async {
+      print('value = $value');
+      if (value.toString() == 'null') {
+        String apiCreateAccount =
+            'https://www.androidthai.in.th/bigc/insertUser.php?isAdd=true&name=$name&user=$user&password=$password&lat=$lat&lng=$lng';
+        await Dio().get(apiCreateAccount).then((value) {
+          if (value.toString() == 'true') {
+            Navigator.pop(context);
+          } else {
+            normalDialog(context, 'Error', 'Please Try again');
+          }
+        });
+      } else {
+        print('User Duplicate');
+        normalDialog(
+            context, 'User Duplicate', 'Please Change User ? User Duplicate');
+      }
+    });
   }
 
   Set<Marker>? markers() {
